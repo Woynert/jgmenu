@@ -70,6 +70,7 @@ void config_set_defaults(void)
 	config.sep_height	   = 5;
 	config.sep_markup	   = NULL;
 	config.sep_halign	   = CENTER;
+	config.hide_overflow   = 0;
 
 	config.font		   = NULL; /* Leave as NULL (see font.c) */
 	config.font_fallback	   = xstrdup("xtg");
@@ -330,6 +331,10 @@ static void process_line(char *line)
 			config.sep_halign = RIGHT;
 		else if (!strcasecmp(value, "center"))
 			config.sep_halign = CENTER;
+
+	} else if (!strcmp(option, "hide_overflow")) {
+        xatoi(&config.hide_overflow, value, XATOI_NONNEG,
+              "config.hide_overflow");
 
 	} else if (!strcmp(option, "font")) {
 		xfree(config.font);

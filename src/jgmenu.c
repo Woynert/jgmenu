@@ -751,8 +751,12 @@ static void set_submenu_width(void)
 	int reqw = geo_get_menu_width_from_itemarea_width(submenu_itemarea_width());
 	struct point maxarea = geo_get_max_menuarea_that_fits();
 
-	mw = reqw < maxarea.x ? reqw : maxarea.x;
-	if (mw < config.menu_width)
+	if (!config.hide_overflow) {
+		mw = reqw < maxarea.x ? reqw : maxarea.x;
+		if (mw < config.menu_width)
+			mw = config.menu_width;
+	}
+	else
 		mw = config.menu_width;
 
 	if (config.position_mode != POSITION_MODE_PTR)

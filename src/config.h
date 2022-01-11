@@ -62,6 +62,7 @@ struct config {
 	int sep_height;
 	char *sep_markup;
 	enum alignment sep_halign;
+	int hide_overflow;
 
 	char *font;
 	char *font_fallback;
