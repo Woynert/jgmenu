@@ -62,12 +62,18 @@ static void cat_csv_file(void)
 	size_t i;
 	struct argv_buf argv_buf;
 
+	struct sbuf path;
 	FILE *fp;
 	char name[128];
 	struct sbuf s;
 
 	sbuf_init(&s);
-	fp = fopen("/home/woynert/.config/jgmenu/prepend.csv", "r");
+	sbuf_init(&path);
+
+	sbuf_addstr(&path, getenv("HOME"));
+	sbuf_addstr(&path, "/.config/jgmenu/prepend.csv");
+
+	fp = fopen(path.buf, "r");
 
 	if (!fp)
 		die("no csv-file");
@@ -114,6 +120,10 @@ static void cat_csv_file(void)
 		printf("%s%s\n", s.buf, buf+strlen(name));
 
 	}
+
+	free(s.buf);
+	free(path.buf);
+	argv_free(&argv_buf);
 
 }
 
