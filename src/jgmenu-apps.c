@@ -16,6 +16,8 @@
 #include "fmt.h"
 #include "i18n.h"
 #include "banned.h"
+#include "charset.h"
+#include "compat.h"
 
 static bool no_append;
 static bool no_prepend;
@@ -47,6 +49,74 @@ static bool ismatch(struct argv_buf dir_categories, const char *app_categories)
 	}
 	return false;
 }
+
+
+/**
+ * cat_csv_file - read lines from FILE, apply csv_format then prints
+ * @fp: file to be read
+ */
+static void cat_csv_file(void)
+{
+
+	char buf[BUFSIZ], *p;
+	size_t i;
+	struct argv_buf argv_buf;
+
+	FILE *fp;
+	char name[128];
+	struct sbuf s;
+
+	sbuf_init(&s);
+	fp = fopen("/home/woynert/.config/jgmenu/prepend.csv", "r");
+
+	if (!fp)
+		die("no csv-file");
+
+	argv_set_delim(&argv_buf, ',');
+
+	for (i = 0; fgets(buf, sizeof(buf), fp); i++) {
+		buf[BUFSIZ - 1] = '\0';
+		if (strlen(buf) == BUFSIZ - 1)
+			die("item %d is too long", i);
+		p = strrchr(buf, '\n');
+
+		if (p)
+			*p = '\0';
+		else
+			die("item %d was not correctly terminated with a '\\n'", i);
+		if (!utf8_validate(buf, p - &buf[0])) {
+			warn("line not utf-8 compatible: '%s'", buf);
+			i--;
+			continue;
+		}
+
+		if ((buf[0] == '#')  ||
+		    (buf[0] == '\n') ||
+		    (buf[0] == '\0') ||
+		    (buf[0] == '@')  ||
+		    (buf[0] == '^')  || /* unsure about */
+			(buf[0] == '.' && buf[1] == ' ')
+		    ){
+			printf("%s\n",buf);
+			continue;
+		}
+
+		argv_init(&argv_buf);
+		argv_strdup(&argv_buf, buf);
+		argv_parse(&argv_buf);
+
+		strlcpy(name, argv_buf.argv[0], sizeof(name));
+
+
+		/* empty generic name since it can't be set in prepend.csv */
+		fmt_name(&s, name, "");
+
+		printf("%s%s\n", s.buf, buf+strlen(name));
+
+	}
+
+}
+
 
 static void print_app_to_buffer(struct app *app, struct sbuf *buf)
 {
@@ -152,7 +222,7 @@ static void print_menu_with_dirs(struct dir *dirs, struct app *apps)
 
 	/* Draw top level menu */
 	if (!no_prepend)
-		i18n_cat("~/.config/jgmenu/prepend.csv");
+		cat_csv_file();
 	for (dir = dirs; dir->name; dir += 1) {
 		if (dir->name_localized)
 			printf("%s", dir->name_localized);
@@ -198,7 +268,8 @@ static void print_menu_no_dirs(struct app *apps)
 
 	sbuf_init(&buf);
 	if (!no_prepend)
-		cat("~/.config/jgmenu/prepend.csv");
+		cat_csv_file();
+
 	for (app = apps; !app->end; app += 1) {
 		if (should_not_display(app))
 			continue;
@@ -251,3 +322,4 @@ int main(int argc, char **argv)
 	xfree(apps);
 	return 0;
 }
+

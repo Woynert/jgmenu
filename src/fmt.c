@@ -29,11 +29,6 @@ void fmt_name(struct sbuf *buf, const char *name, const char *generic_name)
 	sbuf_cpy(buf, "");
 	if (!name)
 		return;
-	if (!generic_name || generic_name[0] == '\0' ||
-	    !strcasecmp(name, generic_name)) {
-		sbuf_cpy(buf, name);
-		return;
-	}
 	for (p = &format[0]; p && *p; p++) {
 		if (*p != '%') {
 			sbuf_addch(buf, p[0]);
